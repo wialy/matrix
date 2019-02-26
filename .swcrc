@@ -1,3 +1,9 @@
 {
-  "minify": true
+  "minify": true,
+  "jsc": {
+    "parser": {
+      "syntax": "ecmascript",
+      "jsx": true
+    }
+  }
 }
