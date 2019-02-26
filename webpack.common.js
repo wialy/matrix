@@ -13,5 +13,16 @@ module.exports = {
     new HtmlWebpackPlugin({
       title: 'Matrix'
     })
-  ]
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.m?jsx?$/,
+        exclude: /(node_modules)/,
+        use: {
+          loader: 'swc-loader'
+        }
+      }
+    ]
+  }
 }
