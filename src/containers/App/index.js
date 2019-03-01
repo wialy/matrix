@@ -27,7 +27,7 @@ const Header = styled.div({
 const Content = styled.div({
   display: 'flex',
   flex: 1,
-  padding: 20
+  padding: smartSize(4)
 })
 
 const snapDistance = 50
@@ -47,12 +47,51 @@ class App extends React.Component {
 
   resizeMapCallback = (index, delta) => (v, i) =>
     Math.max(this.state.snap, i === index ? v + delta : v)
+
   handleMatrixResize = e => {
     const { handle, delta } = e
     this.setState({
       rows: this.state.rows.map(this.resizeMapCallback(handle.i, delta.y)),
       columns: this.state.columns.map(this.resizeMapCallback(handle.j, delta.x))
     })
+  }
+
+  handleMatrixDelete = ({ row, column }) => {
+    if (row != null && !Number.isNaN(row)) {
+      this.setState({
+        rows: [
+          ...this.state.rows.slice(0, row),
+          ...this.state.rows.slice(row + 1)
+        ]
+      })
+    } else if (column != null && !Number.isNaN(column)) {
+      this.setState({
+        columns: [
+          ...this.state.columns.slice(0, column),
+          ...this.state.columns.slice(column + 1)
+        ]
+      })
+    }
+  }
+
+  handleMatrixInsert = ({ row, column }) => {
+    if (row != null && !Number.isNaN(row)) {
+      this.setState({
+        rows: [
+          ...this.state.rows.slice(0, row),
+          snapDistance,
+          ...this.state.rows.slice(row)
+        ]
+      })
+    } else if (column != null && !Number.isNaN(column)) {
+      this.setState({
+        columns: [
+          ...this.state.columns.slice(0, column),
+          snapDistance,
+          ...this.state.columns.slice(column)
+        ]
+      })
+    }
   }
 
   render () {
@@ -68,9 +107,11 @@ class App extends React.Component {
           <Matrix
             mode={matrixMode}
             snap={snap}
-            onResize={this.handleMatrixResize}
             rows={rows}
             columns={columns}
+            onResize={this.handleMatrixResize}
+            onInsert={this.handleMatrixInsert}
+            onDelete={this.handleMatrixDelete}
           />
         </Content>
       </Container>
