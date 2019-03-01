@@ -1,9 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import App from './containers/App'
 
-const App = () => <div>Wow</div>
-
-const root = document.createElement('root')
+const root = document.createElement('main')
 document.body.appendChild(root)
 
 ReactDOM.render(<App />, root)
