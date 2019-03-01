@@ -26,20 +26,37 @@ const Header = styled.div({
 
 const Content = styled.div({
   display: 'flex',
-  flex: 1
+  flex: 1,
+  padding: 20
 })
+
+const snapDistance = 50
 
 class App extends React.Component {
   state = {
-    matrixMode: MatrixMode.layout
+    snap: snapDistance,
+    matrixMode: MatrixMode.layout,
+    rows: Array.from(Array(3)).map((v, i) => snapDistance * (i + 1)),
+    columns: Array.from(Array(5)).map((v, i) => snapDistance * (i + 1))
   }
   handleClickMatrixMode = () =>
     this.setState(({ matrixMode }) => ({
       matrixMode:
         matrixMode === MatrixMode.data ? MatrixMode.layout : MatrixMode.data
     }))
+
+  resizeMapCallback = (index, delta) => (v, i) =>
+    Math.max(this.state.snap, i === index ? v + delta : v)
+  handleMatrixResize = e => {
+    const { handle, delta } = e
+    this.setState({
+      rows: this.state.rows.map(this.resizeMapCallback(handle.i, delta.y)),
+      columns: this.state.columns.map(this.resizeMapCallback(handle.j, delta.x))
+    })
+  }
+
   render () {
-    const { matrixMode } = this.state
+    const { matrixMode, snap, rows, columns } = this.state
     return (
       <Container>
         <GlobalStyles />
@@ -50,8 +67,10 @@ class App extends React.Component {
         <Content>
           <Matrix
             mode={matrixMode}
-            rows={Array.from(Array(10)).map((v, i) => i + 1)}
-            columns={Array.from(Array(10)).map((v, i) => i + 1)}
+            snap={snap}
+            onResize={this.handleMatrixResize}
+            rows={rows}
+            columns={columns}
           />
         </Content>
       </Container>
