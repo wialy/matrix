@@ -30,14 +30,34 @@ const Content = styled.div({
   padding: smartSize(4)
 })
 
-const snapDistance = 50
+/**
+ * Size of matrix grid
+ */
+const gridSize = 50
+const numRows = 3
+const numCols = 3
+
+const resizeMapCallback = (index, delta) => (v, i) =>
+  Math.max(gridSize, i === index ? v + delta : v)
+
+const safelyDelete = (array, index) =>
+  index != null && !Number.isNaN(index) && array.length > 1
+    ? [...array.slice(0, index), ...array.slice(index + 1)]
+    : array
+
+const safelyInsert = (array, index, value) =>
+  index != null && !Number.isNaN(index)
+    ? [...array.slice(0, index), value, ...array.slice(index)]
+    : array
 
 class App extends React.Component {
   state = {
-    snap: snapDistance,
     matrixMode: MatrixMode.layout,
-    rows: Array.from(Array(3)).map((v, i) => snapDistance * (i + 1)),
-    columns: Array.from(Array(5)).map((v, i) => snapDistance * (i + 1))
+    rows: Array.from(Array(numRows)).map((v, i) => gridSize * (i + 1)),
+    columns: Array.from(Array(numCols)).map((v, i) => gridSize * (i + 1)),
+    values: Array.from(Array(numRows)).map((v, i) =>
+      Array.from(Array(numCols)).map((v, j) => `${i}:${j}`)
+    )
   }
   handleClickMatrixMode = () =>
     this.setState(({ matrixMode }) => ({
@@ -45,57 +65,32 @@ class App extends React.Component {
         matrixMode === MatrixMode.data ? MatrixMode.layout : MatrixMode.data
     }))
 
-  resizeMapCallback = (index, delta) => (v, i) =>
-    Math.max(this.state.snap, i === index ? v + delta : v)
-
   handleMatrixResize = e => {
     const { handle, delta } = e
     this.setState({
-      rows: this.state.rows.map(this.resizeMapCallback(handle.i, delta.y)),
-      columns: this.state.columns.map(this.resizeMapCallback(handle.j, delta.x))
+      rows: this.state.rows.map(resizeMapCallback(handle.i, delta.y)),
+      columns: this.state.columns.map(resizeMapCallback(handle.j, delta.x))
     })
   }
 
-  handleMatrixDelete = ({ row, column }) => {
-    if (row != null && !Number.isNaN(row)) {
-      this.setState({
-        rows: [
-          ...this.state.rows.slice(0, row),
-          ...this.state.rows.slice(row + 1)
-        ]
-      })
-    } else if (column != null && !Number.isNaN(column)) {
-      this.setState({
-        columns: [
-          ...this.state.columns.slice(0, column),
-          ...this.state.columns.slice(column + 1)
-        ]
-      })
-    }
-  }
+  handleMatrixDelete = ({ row, column }) =>
+    this.setState(({ rows, columns, values }) => ({
+      rows: safelyDelete(rows, row),
+      columns: safelyDelete(columns, column),
+      values: safelyDelete(values, row).map(col => safelyDelete(col, column))
+    }))
 
-  handleMatrixInsert = ({ row, column }) => {
-    if (row != null && !Number.isNaN(row)) {
-      this.setState({
-        rows: [
-          ...this.state.rows.slice(0, row),
-          snapDistance,
-          ...this.state.rows.slice(row)
-        ]
-      })
-    } else if (column != null && !Number.isNaN(column)) {
-      this.setState({
-        columns: [
-          ...this.state.columns.slice(0, column),
-          snapDistance,
-          ...this.state.columns.slice(column)
-        ]
-      })
-    }
-  }
+  handleMatrixInsert = ({ row, column }) =>
+    this.setState(({ rows, columns, values }) => ({
+      rows: safelyInsert(rows, row, gridSize),
+      columns: safelyInsert(columns, column, gridSize),
+      values: safelyInsert(values, row, Array.from(Array(columns.length))).map(
+        col => safelyInsert(col, column, void 0)
+      )
+    }))
 
   render () {
-    const { matrixMode, snap, rows, columns } = this.state
+    const { matrixMode, rows, columns, values } = this.state
     return (
       <Container>
         <GlobalStyles />
@@ -106,9 +101,10 @@ class App extends React.Component {
         <Content>
           <Matrix
             mode={matrixMode}
-            snap={snap}
+            gridSize={gridSize}
             rows={rows}
             columns={columns}
+            values={values}
             onResize={this.handleMatrixResize}
             onInsert={this.handleMatrixInsert}
             onDelete={this.handleMatrixDelete}

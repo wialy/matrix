@@ -1,103 +1,29 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import styled from '@emotion/styled'
-import Layer from './Layer'
-
 import { DraggableCore } from 'react-draggable'
+
+import Layer from './Layer'
+import Dots from './Dots'
+import Cell from './Cell'
+import ModifyButton from './ModifyButton'
+import DragHandle from './DragHandle'
+import Container from './Container'
 
 export const MatrixMode = {
   layout: 'layout',
   data: 'data'
 }
 
-const transition = 'all 0.1s ease-out'
+export const transition = 'all 0.1s ease-out'
 
-const Container = styled.div({
-  position: 'relative',
-  flex: 1
-})
-
-const Dots = styled.div(({ snap = 32 }) => ({
-  flex: 1,
-  background: `radial-gradient(#eee 2px, transparent 0)`,
-  backgroundSize: `${snap}px ${snap}px`,
-  backgroundPosition: `${-0.5 * snap}px ${-0.5 * snap}px`,
-  pointerEvents: 'none'
-}))
-
-const Cell = styled.div(({ w, h, y, x }) => ({
-  position: 'absolute',
-  left: `${x}px`,
-  top: `${y}px`,
-  width: `${w}px`,
-  height: `${h}px`,
-  outline: `4px solid #eee`,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  overflow: 'hidden',
-  outlineOffset: '-2px',
-  transition
-}))
-
-const Handle = styled.div(({ x, y }) => ({
-  position: 'absolute',
-  width: '50px',
-  height: '50px',
-  left: `${x - 25}px`,
-  top: `${y - 25}px`,
-  cursor: 'move',
-  transition,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  '&::after': {
-    content: "''",
-    width: '12px',
-    height: '12px',
-    background: '#FF851B',
-    borderRadius: '50%',
-    border: '4px solid white'
-  }
-}))
-
-const InsertDeleteButton = styled.div(
-  ({ x, y, column = false, size = 20, remove }) => ({
-    position: 'absolute',
-    width: `${size}px`,
-    height: `${size}px`,
-    borderRadius: '4px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: remove ? '#FF4136' : '#2ECC40',
-    color: 'white',
-    top: y,
-    left: x,
-    transition,
-    cursor: 'pointer',
-    transform: remove
-      ? `translate(${-size / 2}px, ${-size / 2}px)`
-      : column
-        ? `rotate(90deg) translate(${-2 * size}px, 50%)`
-        : `translate(${-2 * size}px, -50%)`,
-    '&::after': {
-      content: remove ? '"-"' : '"✚"'
-    },
-    '&::before': remove
-      ? void 0
-      : {
-        content: '""',
-        position: 'absolute',
-        height: '2px',
-        width: `${size}px`,
-        left: `${size}px`,
-        backgroundColor: '#eee'
-      }
-  })
-)
-
+/**
+ * Iterates the array calling callback function on every element
+ * Callback receives 4 params: current element, sum of elements from first to current,
+ * current index and array, on which function is called.
+ * @param {array} array
+ * @param {function} callback
+ */
 const mapSum = function (array, callback) {
   let total = 0
   const result = []
@@ -112,8 +38,9 @@ class Matrix extends React.Component {
   static propTypes = {
     rows: PropTypes.arrayOf(PropTypes.number).isRequired,
     columns: PropTypes.arrayOf(PropTypes.number).isRequired,
+    values: PropTypes.array,
     mode: PropTypes.oneOf(Object.keys(MatrixMode)),
-    snap: PropTypes.number,
+    gridSize: PropTypes.number,
     onResize: PropTypes.func,
     onInsert: PropTypes.func,
     onDelete: PropTypes.func
@@ -173,13 +100,19 @@ class Matrix extends React.Component {
   }
 
   render () {
-    const { mode = MatrixMode.layout, rows, columns, snap } = this.props
+    const {
+      mode = MatrixMode.layout,
+      rows,
+      columns,
+      gridSize,
+      values
+    } = this.props
     const totalRows = rows.length
     const totalColumns = columns.length
     return (
       <Container>
         <Layer visible={mode === MatrixMode.layout}>
-          <Dots snap={snap} />
+          <Dots gridSize={gridSize} />
         </Layer>
         <Layer>
           {mapSum(rows, (h, y, i) =>
@@ -190,29 +123,29 @@ class Matrix extends React.Component {
                 y={y}
                 w={w}
                 h={h}>
-                {w / snap}x{h / snap}
+                {Array.isArray(values[i]) && values[i][j]}
               </Cell>
             ))
           )}
         </Layer>
         <DraggableCore
-          grid={[snap, snap]}
+          grid={[gridSize, gridSize]}
           onStart={this.handleDragStart}
           onDrag={this.handleDrag}
           onStop={this.handleDragStop}>
           <Layer visible={mode === MatrixMode.layout}>
             {mapSum(rows, (h, y, i) =>
               mapSum(columns, (w, x, j) => (
-                <Handle
-                  data-type={'handle'}
+                <DragHandle
                   key={`handle-${i}:${j}-${totalRows * totalColumns}`}
+                  data-type={'handle'}
                   data-coo={JSON.stringify({ i, j })}
                   x={x + w}
                   y={y + h}
                 />
               ))
             )}
-            <InsertDeleteButton
+            <ModifyButton
               key={`insert-row-0-${totalRows}`}
               x={0}
               y={0}
@@ -220,7 +153,7 @@ class Matrix extends React.Component {
               onClick={this.handleClickInsert}
             />
             {mapSum(rows, (h, y, i) => (
-              <InsertDeleteButton
+              <ModifyButton
                 key={`insert-row-${i + 1}-${totalRows}`}
                 x={0}
                 y={y + h}
@@ -228,7 +161,7 @@ class Matrix extends React.Component {
                 onClick={this.handleClickInsert}
               />
             ))}
-            <InsertDeleteButton
+            <ModifyButton
               key={`insert-col-0-${totalColumns}`}
               x={0}
               y={0}
@@ -237,7 +170,7 @@ class Matrix extends React.Component {
               onClick={this.handleClickInsert}
             />
             {mapSum(columns, (w, x, i) => (
-              <InsertDeleteButton
+              <ModifyButton
                 key={`insert-col-${i + 1}-${totalColumns}`}
                 x={x + w}
                 y={0}
@@ -246,28 +179,29 @@ class Matrix extends React.Component {
                 onClick={this.handleClickInsert}
               />
             ))}
-
-            {mapSum(rows, (h, y, i) => (
-              <InsertDeleteButton
-                key={`delete-row-${i + 1}-${totalRows}`}
-                data-row={i}
-                x={0}
-                y={y + h / 2}
-                remove
-                onClick={this.handleClickDelete}
-              />
-            ))}
-            {mapSum(columns, (w, x, i) => (
-              <InsertDeleteButton
-                key={`insert-col-${i + 1}-${totalColumns}`}
-                x={x + w / 2}
-                y={0}
-                data-column={i}
-                column
-                remove
-                onClick={this.handleClickDelete}
-              />
-            ))}
+            {rows.length > 1 &&
+              mapSum(rows, (h, y, i) => (
+                <ModifyButton
+                  key={`delete-row-${i + 1}-${totalRows}`}
+                  data-row={i}
+                  x={0}
+                  y={y + h / 2}
+                  remove
+                  onClick={this.handleClickDelete}
+                />
+              ))}
+            {columns.length > 1 &&
+              mapSum(columns, (w, x, i) => (
+                <ModifyButton
+                  key={`insert-col-${i + 1}-${totalColumns}`}
+                  x={x + w / 2}
+                  y={0}
+                  data-column={i}
+                  column
+                  remove
+                  onClick={this.handleClickDelete}
+                />
+              ))}
           </Layer>
         </DraggableCore>
       </Container>
