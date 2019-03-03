@@ -63,8 +63,7 @@ class Matrix extends React.Component {
   }
 
   state = {
-    resizeHandle: null,
-    deletedRows: []
+    resizeHandle: null
   }
 
   handleDragStart = e => {
@@ -82,9 +81,7 @@ class Matrix extends React.Component {
     } catch (err) {}
   }
 
-  handleDragStop = (e, data) => {
-    this.setState({ resizeHandle: null })
-  }
+  handleDragStop = () => this.setState({ resizeHandle: null })
 
   handleDrag = (e, { deltaX, deltaY }) => {
     if (typeof this.props.onChange === 'function') {
@@ -131,6 +128,24 @@ class Matrix extends React.Component {
     }
   }
 
+  handleCellKeyDown = e => e.key === 'Enter' && document.activeElement.blur()
+  handleCellBlur = e => {
+    if (typeof this.props.onChange === 'function') {
+      const { innerHTML } = e.currentTarget
+      const { coo } = e.currentTarget.dataset
+      const currentCell = JSON.parse(coo)
+      const { values } = this.props
+
+      this.props.onChange({
+        values: values.map((row, i) =>
+          i === currentCell.i
+            ? row.map((cell, j) => (j === currentCell.j ? innerHTML : cell))
+            : row
+        )
+      })
+    }
+  }
+
   render () {
     const {
       rows,
@@ -147,15 +162,19 @@ class Matrix extends React.Component {
           <Dots gridSize={gridSize} />
         </Layer>
         <Layer>
-          {mapSum(rows, (h, y, i) => (
+          {rows.map((h, i) => (
             <Row key={`row-${i}-${totalRows}`}>
-              {mapSum(columns, (w, x, j) => (
+              {columns.map((w, j) => (
                 <Cell
                   key={`cell-${i}:${j}-${totalRows * totalColumns}`}
-                  x={x}
-                  y={y}
                   w={w}
-                  h={h}>
+                  h={h}
+                  data-coo={JSON.stringify({ i, j })}
+                  touchable={mode === MatrixMode.data}
+                  contentEditable
+                  suppressContentEditableWarning
+                  onBlur={this.handleCellBlur}
+                  onKeyDown={this.handleCellKeyDown}>
                   {Array.isArray(values[i]) && values[i][j]}
                 </Cell>
               ))}

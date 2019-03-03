@@ -2,7 +2,7 @@ import styled from '@emotion/styled'
 
 import { transition } from './'
 
-const Cell = styled.div(({ w, h, y, x }) => ({
+const Cell = styled.div(({ w, h, touchable }) => ({
   width: `${w}px`,
   height: `${h}px`,
   outline: `4px solid #eee`,
@@ -11,7 +11,14 @@ const Cell = styled.div(({ w, h, y, x }) => ({
   justifyContent: 'center',
   overflow: 'hidden',
   outlineOffset: '-2px',
-  transition
+  pointerEvents: touchable ? void 0 : 'none',
+  color: touchable ? 'black' : '#ccc',
+  transition,
+  '&:focus': {
+    outline: `4px solid #FFFF00`,
+    backgroundColor: '#FFFF00',
+    zIndex: 1
+  }
 }))
 
 export default Cell

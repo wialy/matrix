@@ -8,8 +8,8 @@ import Button from '../../components/Button'
  * Size of matrix grid
  */
 const gridSize = 50
-const numRows = 2
-const numCols = 2
+const numRows = 1
+const numCols = 1
 
 const Container = styled.div({
   position: 'fixed',
@@ -24,12 +24,13 @@ const Container = styled.div({
   fontFamily: 'Helvetica, Arial, sans-serif'
 })
 
-const Header = styled.div({
+const Controls = styled.div({
   flexBasis: '4em',
   flexShrink: 0,
   display: 'flex',
   alignItems: 'center',
-  padding: '0 1rem'
+  padding: '0 1rem',
+  justifyContent: 'center'
 })
 
 const Content = styled.div({
@@ -42,11 +43,11 @@ const Content = styled.div({
 
 class App extends React.Component {
   state = {
-    matrixMode: MatrixMode.layout,
-    rows: Array.from(Array(numRows)).map((v, i) => gridSize * 2),
-    columns: Array.from(Array(numCols)).map((v, i) => gridSize * 3),
+    matrixMode: MatrixMode.data,
+    rows: Array.from(Array(numRows)).map(() => gridSize * 3),
+    columns: Array.from(Array(numCols)).map(() => gridSize * 3),
     values: Array.from(Array(numRows)).map((v, i) =>
-      Array.from(Array(numCols)).map((v, j) => `${i}:${j}`)
+      Array.from(Array(numCols)).map((v, j) => `Touch me`)
     )
   }
   handleClickMatrixMode = () =>
@@ -61,11 +62,6 @@ class App extends React.Component {
     const { matrixMode, rows, columns, values } = this.state
     return (
       <Container>
-        <Header>
-          <Button onClick={this.handleClickMatrixMode}>
-            {matrixMode === MatrixMode.data ? 'Edit layout' : 'Done'}
-          </Button>
-        </Header>
         <Content>
           <Matrix
             mode={matrixMode}
@@ -76,6 +72,11 @@ class App extends React.Component {
             onChange={this.handleMatrixChange}
           />
         </Content>
+        <Controls>
+          <Button onClick={this.handleClickMatrixMode}>
+            {matrixMode === MatrixMode.data ? 'Edit layout' : 'Done'}
+          </Button>
+        </Controls>
       </Container>
     )
   }
