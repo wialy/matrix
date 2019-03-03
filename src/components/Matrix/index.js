@@ -34,6 +34,19 @@ const mapSum = function (array, callback) {
   return result
 }
 
+const resizeMapCallback = (index, delta, gridSize) => (v, i) =>
+  Math.max(gridSize, i === index ? v + delta : v)
+
+const safelyDelete = (array, index) =>
+  index != null && !Number.isNaN(index) && array.length > 1
+    ? [...array.slice(0, index), ...array.slice(index + 1)]
+    : array
+
+const safelyInsert = (array, index, value) =>
+  index != null && !Number.isNaN(index)
+    ? [...array.slice(0, index), value, ...array.slice(index)]
+    : array
+
 class Matrix extends React.Component {
   static propTypes = {
     rows: PropTypes.arrayOf(PropTypes.number).isRequired,
@@ -41,9 +54,7 @@ class Matrix extends React.Component {
     values: PropTypes.array,
     mode: PropTypes.oneOf(Object.keys(MatrixMode)),
     gridSize: PropTypes.number,
-    onResize: PropTypes.func,
-    onInsert: PropTypes.func,
-    onDelete: PropTypes.func
+    onChange: PropTypes.func
   }
 
   state = {
@@ -70,32 +81,48 @@ class Matrix extends React.Component {
     this.setState({ resizeHandle: null })
   }
 
-  handleDrag = (e, { deltaX: x, deltaY: y }) => {
-    if (this.state.resizeHandle) {
-      if (typeof this.props.onResize === 'function') {
-        this.props.onResize({
-          handle: this.state.resizeHandle,
-          delta: { x, y }
+  handleDrag = (e, { deltaX, deltaY }) => {
+    if (typeof this.props.onChange === 'function') {
+      const { resizeHandle } = this.state
+      if (resizeHandle) {
+        const { rows, columns, gridSize } = this.props
+        this.props.onChange({
+          rows: rows.map(resizeMapCallback(resizeHandle.i, deltaY, gridSize)),
+          columns: columns.map(
+            resizeMapCallback(resizeHandle.j, deltaX, gridSize)
+          )
         })
       }
     }
   }
 
   handleClickDelete = e => {
-    if (typeof this.props.onDelete === 'function') {
+    if (typeof this.props.onChange === 'function') {
+      const { rows, columns, values } = this.props
       const { row, column } = e.currentTarget.dataset
-      const rowNumber = parseInt(row)
-      const columnNumber = parseInt(column)
-      this.props.onDelete({ row: rowNumber, column: columnNumber })
+      const i = parseInt(row)
+      const j = parseInt(column)
+      this.props.onChange({
+        rows: safelyDelete(rows, i),
+        columns: safelyDelete(columns, j),
+        values: safelyDelete(values, i).map(col => safelyDelete(col, j))
+      })
     }
   }
 
   handleClickInsert = e => {
-    if (typeof this.props.onInsert === 'function') {
+    if (typeof this.props.onChange === 'function') {
+      const { rows, columns, values, gridSize } = this.props
       const { row, column } = e.currentTarget.dataset
-      const rowNumber = parseInt(row)
-      const columnNumber = parseInt(column)
-      this.props.onInsert({ row: rowNumber, column: columnNumber })
+      const i = parseInt(row)
+      const j = parseInt(column)
+      this.props.onChange({
+        rows: safelyInsert(rows, i, gridSize),
+        columns: safelyInsert(columns, j, gridSize),
+        values: safelyInsert(values, i, Array.from(Array(columns.length))).map(
+          col => safelyInsert(col, j, void 0)
+        )
+      })
     }
   }
 

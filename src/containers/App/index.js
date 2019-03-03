@@ -32,27 +32,14 @@ const Content = styled.div({
  * Size of matrix grid
  */
 const gridSize = 50
-const numRows = 3
-const numCols = 3
-
-const resizeMapCallback = (index, delta) => (v, i) =>
-  Math.max(gridSize, i === index ? v + delta : v)
-
-const safelyDelete = (array, index) =>
-  index != null && !Number.isNaN(index) && array.length > 1
-    ? [...array.slice(0, index), ...array.slice(index + 1)]
-    : array
-
-const safelyInsert = (array, index, value) =>
-  index != null && !Number.isNaN(index)
-    ? [...array.slice(0, index), value, ...array.slice(index)]
-    : array
+const numRows = 2
+const numCols = 2
 
 class App extends React.Component {
   state = {
     matrixMode: MatrixMode.layout,
-    rows: Array.from(Array(numRows)).map((v, i) => gridSize * (i + 1)),
-    columns: Array.from(Array(numCols)).map((v, i) => gridSize * (i + 1)),
+    rows: Array.from(Array(numRows)).map((v, i) => gridSize * 2),
+    columns: Array.from(Array(numCols)).map((v, i) => gridSize * 3),
     values: Array.from(Array(numRows)).map((v, i) =>
       Array.from(Array(numCols)).map((v, j) => `${i}:${j}`)
     )
@@ -63,29 +50,7 @@ class App extends React.Component {
         matrixMode === MatrixMode.data ? MatrixMode.layout : MatrixMode.data
     }))
 
-  handleMatrixResize = e => {
-    const { handle, delta } = e
-    this.setState({
-      rows: this.state.rows.map(resizeMapCallback(handle.i, delta.y)),
-      columns: this.state.columns.map(resizeMapCallback(handle.j, delta.x))
-    })
-  }
-
-  handleMatrixDelete = ({ row, column }) =>
-    this.setState(({ rows, columns, values }) => ({
-      rows: safelyDelete(rows, row),
-      columns: safelyDelete(columns, column),
-      values: safelyDelete(values, row).map(col => safelyDelete(col, column))
-    }))
-
-  handleMatrixInsert = ({ row, column }) =>
-    this.setState(({ rows, columns, values }) => ({
-      rows: safelyInsert(rows, row, gridSize),
-      columns: safelyInsert(columns, column, gridSize),
-      values: safelyInsert(values, row, Array.from(Array(columns.length))).map(
-        col => safelyInsert(col, column, void 0)
-      )
-    }))
+  handleMatrixChange = changedFields => this.setState(changedFields)
 
   render () {
     const { matrixMode, rows, columns, values } = this.state
@@ -103,9 +68,7 @@ class App extends React.Component {
             rows={rows}
             columns={columns}
             values={values}
-            onResize={this.handleMatrixResize}
-            onInsert={this.handleMatrixInsert}
-            onDelete={this.handleMatrixDelete}
+            onChange={this.handleMatrixChange}
           />
         </Content>
       </Container>
