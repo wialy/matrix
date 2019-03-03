@@ -2,7 +2,7 @@
 
 A demo application showing `Matrix` React component to edit grid-organized data and export to `CSV`.
 
-## [Live demo 🐇](http://test13378.futurehost.pl/matrix/index.html)
+## [Live demo](http://test13378.futurehost.pl/matrix/index.html) 🐇
 
 ## Usage
 
@@ -21,7 +21,7 @@ import Matrix, { MatrixMode } from 'matrix'
 
 ## Development
 
-Install dependecies and run a webpack dev server.
+Install dependencies and run a webpack dev server.
 The output is opened in brower on `localhost:8080`
 
 ```console
