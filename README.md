@@ -1,8 +1,8 @@
 # Matrix
 
-A demo application showing `Matrix` React component to edit grid-organized data.
+A demo application showing `Matrix` React component to edit grid-organized data and export to `CSV`.
 
-## [Live demo](http://test13378.futurehost.pl/matrix/index.html)
+## [Live demo 🐇](http://test13378.futurehost.pl/matrix/index.html)
 
 ## Usage
 
@@ -36,3 +36,11 @@ Production ready build is located in `dist` folder after running a command below
 ```console
 yarn build
 ```
+
+## Author
+
+Made with 💖 by [Alex Ilchenko](mailto:ilczenko@gmail.com)
+
+## License
+
+This project is licensed under the MIT License
