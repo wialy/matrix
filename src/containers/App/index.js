@@ -4,6 +4,8 @@ import styled from '@emotion/styled'
 import Matrix, { MatrixMode } from '../../components/Matrix'
 import Button from '../../components/Button'
 
+import csv from 'json2csv'
+
 const gridSize = 50
 const numRows = 1
 const numCols = 1
@@ -54,6 +56,15 @@ class App extends React.Component {
 
   handleMatrixChange = changedFields => this.setState(changedFields)
 
+  handleClickExport = () => {
+    const csvContent = csv.parse(this.state.values, {
+      header: false,
+      defaultValue: ''
+    })
+    const uri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`)
+    window.open(uri)
+  }
+
   render () {
     const { matrixMode, rows, columns, values } = this.state
     return (
@@ -72,6 +83,7 @@ class App extends React.Component {
           <Button onClick={this.handleClickMatrixMode}>
             {matrixMode === MatrixMode.data ? 'Edit layout' : 'Done'}
           </Button>
+          <Button onClick={this.handleClickExport}>Download as CSV</Button>
         </Controls>
       </Container>
     )
