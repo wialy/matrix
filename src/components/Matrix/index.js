@@ -6,6 +6,7 @@ import { DraggableCore } from 'react-draggable'
 import Layer from './Layer'
 import Dots from './Dots'
 import Cell from './Cell'
+import Row from './Row'
 import ModifyButton from './ModifyButton'
 import DragHandle from './DragHandle'
 import Container from './Container'
@@ -16,6 +17,8 @@ export const MatrixMode = {
 }
 
 export const transition = 'all 0.1s ease-out'
+
+const defaultGridSize = 50
 
 /**
  * Iterates the array calling callback function on every element
@@ -34,8 +37,10 @@ const mapSum = function (array, callback) {
   return result
 }
 
-const resizeMapCallback = (index, delta, gridSize) => (v, i) =>
-  Math.max(gridSize, i === index ? v + delta : v)
+const resizeMapCallback = (index, delta, gridSize = defaultGridSize) => (
+  v,
+  i
+) => Math.max(gridSize, i === index ? v + delta : v)
 
 const safelyDelete = (array, index) =>
   index != null && !Number.isNaN(index) && array.length > 1
@@ -85,7 +90,7 @@ class Matrix extends React.Component {
     if (typeof this.props.onChange === 'function') {
       const { resizeHandle } = this.state
       if (resizeHandle) {
-        const { rows, columns, gridSize } = this.props
+        const { rows, columns, gridSize = defaultGridSize } = this.props
         this.props.onChange({
           rows: rows.map(resizeMapCallback(resizeHandle.i, deltaY, gridSize)),
           columns: columns.map(
@@ -112,7 +117,7 @@ class Matrix extends React.Component {
 
   handleClickInsert = e => {
     if (typeof this.props.onChange === 'function') {
-      const { rows, columns, values, gridSize } = this.props
+      const { rows, columns, values, gridSize = defaultGridSize } = this.props
       const { row, column } = e.currentTarget.dataset
       const i = parseInt(row)
       const j = parseInt(column)
@@ -128,32 +133,34 @@ class Matrix extends React.Component {
 
   render () {
     const {
-      mode = MatrixMode.layout,
       rows,
       columns,
-      gridSize,
-      values
+      values,
+      gridSize = defaultGridSize,
+      mode = MatrixMode.layout
     } = this.props
     const totalRows = rows.length
     const totalColumns = columns.length
     return (
-      <Container>
-        <Layer visible={mode === MatrixMode.layout}>
+      <Container margin={gridSize}>
+        <Layer visible={mode === MatrixMode.layout} absolute>
           <Dots gridSize={gridSize} />
         </Layer>
         <Layer>
-          {mapSum(rows, (h, y, i) =>
-            mapSum(columns, (w, x, j) => (
-              <Cell
-                key={`cell-${i}:${j}-${totalRows * totalColumns}`}
-                x={x}
-                y={y}
-                w={w}
-                h={h}>
-                {Array.isArray(values[i]) && values[i][j]}
-              </Cell>
-            ))
-          )}
+          {mapSum(rows, (h, y, i) => (
+            <Row key={`row-${i}-${totalRows}`}>
+              {mapSum(columns, (w, x, j) => (
+                <Cell
+                  key={`cell-${i}:${j}-${totalRows * totalColumns}`}
+                  x={x}
+                  y={y}
+                  w={w}
+                  h={h}>
+                  {Array.isArray(values[i]) && values[i][j]}
+                </Cell>
+              ))}
+            </Row>
+          ))}
         </Layer>
         <DraggableCore
           grid={[gridSize, gridSize]}

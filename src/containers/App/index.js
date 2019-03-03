@@ -2,7 +2,14 @@ import React from 'react'
 import styled from '@emotion/styled'
 
 import Matrix, { MatrixMode } from '../../components/Matrix'
-import GlobalStyles from '../../styles/GlobalStyles'
+import Button from '../../components/Button'
+
+/**
+ * Size of matrix grid
+ */
+const gridSize = 50
+const numRows = 2
+const numCols = 2
 
 const Container = styled.div({
   position: 'fixed',
@@ -12,6 +19,8 @@ const Container = styled.div({
   right: 0,
   display: 'flex',
   flexDirection: 'column',
+  justifyContent: 'flex-start',
+  alignItems: 'stretch',
   fontFamily: 'Helvetica, Arial, sans-serif'
 })
 
@@ -25,15 +34,11 @@ const Header = styled.div({
 
 const Content = styled.div({
   display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
   flex: 1
 })
-
-/**
- * Size of matrix grid
- */
-const gridSize = 50
-const numRows = 2
-const numCols = 2
 
 class App extends React.Component {
   state = {
@@ -56,10 +61,10 @@ class App extends React.Component {
     const { matrixMode, rows, columns, values } = this.state
     return (
       <Container>
-        <GlobalStyles />
         <Header>
-          Matrix mode:{' '}
-          <span onClick={this.handleClickMatrixMode}>{matrixMode}</span>
+          <Button onClick={this.handleClickMatrixMode}>
+            {matrixMode === MatrixMode.data ? 'Edit layout' : 'Done'}
+          </Button>
         </Header>
         <Content>
           <Matrix

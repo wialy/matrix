@@ -1,8 +1,8 @@
 import styled from '@emotion/styled'
 
-const Container = styled.div({
+const Container = styled.div(({ margin }) => ({
   position: 'relative',
-  flex: 1
-})
+  margin
+}))
 
 export default Container
