@@ -37,26 +37,57 @@ const mapSum = function (array, callback) {
   return result
 }
 
+/**
+ * Callback function called when matrix cell is being resized.
+ * Returns function, that changes cell size by delta, keeping minimum gridSize.
+ * @param {number} index
+ * @param {number} delta
+ * @param {number} gridSize
+ */
 const resizeMapCallback = (index, delta, gridSize = defaultGridSize) => (
   v,
   i
 ) => Math.max(gridSize, i === index ? v + delta : v)
 
+/**
+ * Safely removes element at index position from array.
+ * Does not allows to remove last element.
+ * @param {array} array
+ * @param {number} index
+ */
 const safelyDelete = (array, index) =>
-  index != null && !Number.isNaN(index) && array.length > 1
+  index != null &&
+  !Number.isNaN(index) &&
+  Array.isArray(array) &&
+  array.length > 1
     ? [...array.slice(0, index), ...array.slice(index + 1)]
     : array
 
+/**
+ * Safely inserts value into array at index position.
+ * @param {array} array
+ * @param {number} index
+ * @param {*} value
+ */
 const safelyInsert = (array, index, value) =>
-  index != null && !Number.isNaN(index)
+  index != null && !Number.isNaN(index) && index >= 0
     ? [...array.slice(0, index), value, ...array.slice(index)]
     : array
 
-class Matrix extends React.Component {
+/**
+ * Main matrix class.
+ * @param {array} rows - array of rows' heights, required
+ * @param {array} columns - array of columns' widths, required
+ * @param {array} values - two dimensional array of values, required
+ * @param {function} onChange - function that is called every time the layout or values change
+ * @param {string} mode - sets matrix to data/layout edition modes
+ * @param {number} gridSize - size of grid the matrix snaps to
+ */
+class Matrix extends React.PureComponent {
   static propTypes = {
     rows: PropTypes.arrayOf(PropTypes.number).isRequired,
     columns: PropTypes.arrayOf(PropTypes.number).isRequired,
-    values: PropTypes.array,
+    values: PropTypes.array.isRequired,
     mode: PropTypes.oneOf(Object.keys(MatrixMode)),
     gridSize: PropTypes.number,
     onChange: PropTypes.func
@@ -66,6 +97,7 @@ class Matrix extends React.Component {
     resizeHandle: null
   }
 
+  // Drag handlers
   handleDragStart = e => {
     try {
       const { type } = e.target.dataset
@@ -77,12 +109,14 @@ class Matrix extends React.Component {
             resizeHandle: coo
           })
           break
+        // other drag interactions may be added here
+        default:
+          // no default
+          break
       }
     } catch (err) {}
   }
-
   handleDragStop = () => this.setState({ resizeHandle: null })
-
   handleDrag = (e, { deltaX, deltaY }) => {
     if (typeof this.props.onChange === 'function') {
       const { resizeHandle } = this.state
@@ -98,6 +132,7 @@ class Matrix extends React.Component {
     }
   }
 
+  // Delete row or column
   handleClickDelete = e => {
     if (typeof this.props.onChange === 'function') {
       const { rows, columns, values } = this.props
@@ -112,6 +147,7 @@ class Matrix extends React.Component {
     }
   }
 
+  // Insert row or column
   handleClickInsert = e => {
     if (typeof this.props.onChange === 'function') {
       const { rows, columns, values, gridSize = defaultGridSize } = this.props
@@ -128,7 +164,9 @@ class Matrix extends React.Component {
     }
   }
 
-  handleCellKeyDown = e => e.key === 'Enter' && document.activeElement.blur()
+  // Edit data handlers.
+  handleCellKeyDown = e =>
+    e.key === 'Enter' && document.activeElement && document.activeElement.blur()
   handleCellBlur = e => {
     if (typeof this.props.onChange === 'function') {
       const { innerHTML } = e.currentTarget
@@ -139,7 +177,11 @@ class Matrix extends React.Component {
       this.props.onChange({
         values: values.map((row, i) =>
           i === currentCell.i
-            ? row.map((cell, j) => (j === currentCell.j ? innerHTML : cell))
+            ? row.map((cell, j) =>
+              j === currentCell.j
+                ? String(innerHTML).replace(/&nbsp;|\u202F|\u00A0/g, ' ')
+                : cell
+            )
             : row
         )
       })
@@ -158,9 +200,11 @@ class Matrix extends React.Component {
     const totalColumns = columns.length
     return (
       <Container margin={gridSize}>
+        {/* Dots in background, visible only in layout edit mode */}
         <Layer visible={mode === MatrixMode.layout} absolute>
           <Dots gridSize={gridSize} />
         </Layer>
+        {/* Matrix values */}
         <Layer>
           {rows.map((h, i) => (
             <Row key={`row-${i}-${totalRows}`}>
@@ -172,6 +216,7 @@ class Matrix extends React.Component {
                   data-coo={JSON.stringify({ i, j })}
                   touchable={mode === MatrixMode.data}
                   contentEditable
+                  spellCheck={false}
                   suppressContentEditableWarning
                   onBlur={this.handleCellBlur}
                   onKeyDown={this.handleCellKeyDown}>
@@ -181,12 +226,14 @@ class Matrix extends React.Component {
             </Row>
           ))}
         </Layer>
+        {/* Layout edit mode elements */}
         <DraggableCore
           grid={[gridSize, gridSize]}
           onStart={this.handleDragStart}
           onDrag={this.handleDrag}
           onStop={this.handleDragStop}>
           <Layer visible={mode === MatrixMode.layout}>
+            {/* Draggable elements to resize matrix cells */}
             {mapSum(rows, (h, y, i) =>
               mapSum(columns, (w, x, j) => (
                 <DragHandle
@@ -198,6 +245,7 @@ class Matrix extends React.Component {
                 />
               ))
             )}
+            {/* Insert rows and columsn buttons */}
             <ModifyButton
               key={`insert-row-0-${totalRows}`}
               x={0}
@@ -232,6 +280,7 @@ class Matrix extends React.Component {
                 onClick={this.handleClickInsert}
               />
             ))}
+            {/* Delete rows and columns buttons */}
             {rows.length > 1 &&
               mapSum(rows, (h, y, i) => (
                 <ModifyButton
@@ -246,7 +295,7 @@ class Matrix extends React.Component {
             {columns.length > 1 &&
               mapSum(columns, (w, x, i) => (
                 <ModifyButton
-                  key={`insert-col-${i + 1}-${totalColumns}`}
+                  key={`delete-col-${i + 1}-${totalColumns}`}
                   x={x + w / 2}
                   y={0}
                   data-column={i}

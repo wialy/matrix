@@ -4,9 +4,6 @@ import styled from '@emotion/styled'
 import Matrix, { MatrixMode } from '../../components/Matrix'
 import Button from '../../components/Button'
 
-/**
- * Size of matrix grid
- */
 const gridSize = 50
 const numRows = 1
 const numCols = 1
