@@ -1,7 +1,6 @@
 import React from 'react'
 import styled from '@emotion/styled'
 
-import smartSize from 'smart-size'
 import Matrix, { MatrixMode } from '../../components/Matrix'
 import GlobalStyles from '../../styles/GlobalStyles'
 
@@ -17,17 +16,16 @@ const Container = styled.div({
 })
 
 const Header = styled.div({
-  flexBasis: smartSize(4),
+  flexBasis: '4em',
   flexShrink: 0,
   display: 'flex',
   alignItems: 'center',
-  padding: smartSize(1)
+  padding: '0 1rem'
 })
 
 const Content = styled.div({
   display: 'flex',
-  flex: 1,
-  padding: smartSize(4)
+  flex: 1
 })
 
 /**
