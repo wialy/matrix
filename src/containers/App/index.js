@@ -25,11 +25,10 @@ const Container = styled.div({
 })
 
 const Controls = styled.div({
-  flexBasis: '4em',
   flexShrink: 0,
   display: 'flex',
   alignItems: 'center',
-  padding: '0 1rem',
+  padding: '1rem',
   justifyContent: 'center'
 })
 

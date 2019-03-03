@@ -16,7 +16,7 @@ const Cell = styled.div(({ w, h, touchable }) => ({
   transition,
   '&:focus': {
     outline: `4px solid #FFFF00`,
-    backgroundColor: '#FFFF00',
+    backgroundColor: 'rgba(255,255,0,0.05)',
     zIndex: 1
   }
 }))
